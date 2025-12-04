@@ -53,3 +53,8 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+
+# meson buildwraps
+subprojects/
+!subprojects/*.wrap
