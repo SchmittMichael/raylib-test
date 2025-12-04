@@ -55,6 +55,5 @@ dkms.conf
 *.dwo
 
 
-# meson buildwraps
-subprojects/
-!subprojects/*.wrap
+# ignoring raylib dependency
+subprojects/raylib
