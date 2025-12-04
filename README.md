@@ -9,6 +9,7 @@ A small learning experiece using C and [raylib](https://github.com/raysan5/rayli
 - Meson
 - Ninja
 - Modern C compiler
+- CMake (for building raylib)
 
 
 ## Build
