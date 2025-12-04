@@ -20,6 +20,12 @@ A small learning experiece using C and [raylib](https://github.com/raysan5/rayli
 meson setup -C builddir
 ```
 
+2. Configure compile features for LSP clients
+
+```shell
+meson configure builddir -Dauto_features=enabled
+```
+
 2. Compile programm
 
 ```shell
