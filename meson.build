@@ -9,13 +9,12 @@ project(
   ]
 )
 
-inc = include_directories('include')
+src_files = ['src/main.c', 'src/ball_demo.c', 'src/pong_demo.c']
 
 raylib_dep = dependency('raylib', fallback : ['raylib', 'raylib_dep'])
 
 exe = executable(
   'raylib-test',
-  'src/main.c',
-  include_directories : inc,
+  src_files,
   dependencies: [raylib_dep],
 )
