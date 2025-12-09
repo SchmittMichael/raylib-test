@@ -1,4 +1,4 @@
-// #include "ball_demo.h"
+#include "ball_demo.h"
 #include "pong_demo.h"
 
 const int screenWidth = 800;
