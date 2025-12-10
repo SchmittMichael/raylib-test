@@ -1,19 +1,26 @@
 #include "pong_demo.h"
 #include "raylib.h"
+#include "types.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-struct obj {
+typedef enum {
+  RUNNING = 0,
+  WIN,
+  LOSS,
+} GameState;
+
+typedef struct {
   int posX;
   int posY;
-  int widht;
+  int width;
   int height;
-};
+} Box;
 
-typedef struct obj Player;
-typedef struct obj Box;
+typedef Box Player;
 
 typedef struct {
   int posX;
@@ -33,43 +40,109 @@ typedef struct {
   BoxOption *boxes;
 } GameBoxes;
 
-void physics(GameBoxes *boxes, Player *player, Projectile *projectile,
-             int screenWidth, int screenHeight) {
+static inline int clamp(int v, int min, int max) {
+  return (v < min) ? min : (v > max ? max : v);
+}
 
-  if (projectile->posX < 0 || projectile->posX > screenWidth) {
-    projectile->speedX *= -1;
-  }
+static bool circleIntersectsBox(const Projectile *p, const Box *b) {
+  int closestX = clamp(p->posX, b->posX, b->posX + b->width);
+  int closestY = clamp(p->posY, b->posY, b->posY + b->height);
 
-  if (projectile->posY < 0) projectile->speedY *= -1;
+  int dx = p->posX - closestX;
+  int dy = p->posY - closestY;
+  return (dx * dx + dy * dy) <= (p->radius * p->radius);
+}
 
-  if (projectile->posY > screenHeight) {
-    puts("detected end of game");
-    projectile->speedY *= -1;
-  }
-
+bool checkWin(GameBoxes *boxes) {
   for (size_t i = 0; i < boxes->amount; i++) {
-    BoxOption *option = &boxes->boxes[i];
-    if (!option->exists) continue;
-
-    Box box = option->box;
-    if ((projectile->posX > box.posX &&
-         projectile->posX < box.posX + box.widht) &&
-        (projectile->posY > box.posY &&
-         projectile->posY < box.posY + box.height)) {
-      puts("Hit box top or bottom");
-      option->exists = false;
-      projectile->speedY *= -1;
+    if (boxes->boxes[i].exists) {
+      return false;
     }
   }
+  return true;
+}
 
-  if (projectile->posY > player->posY &&
-      (projectile->posX > player->posX &&
-       projectile->posX < player->posX + player->widht)) {
+void physics(GameBoxes *boxes, Player *player, Projectile *projectile,
+             GameState *state, int screenWidth, int screenHeight) {
+
+  if (projectile->posX < projectile->radius) {
+    projectile->speedX *= -1;
+    projectile->posX = projectile->radius;
+  } else if (projectile->posX + projectile->radius > screenWidth) {
+    projectile->speedX *= -1;
+    projectile->posX = screenWidth - projectile->radius;
+  }
+
+  if (projectile->posY - projectile->radius < 0) {
     projectile->speedY *= -1;
+    projectile->posY = projectile->radius;
+  } else if (projectile->posY + projectile->radius > screenHeight) {
+    *state = LOSS;
+    return;
+  }
+
+  if (circleIntersectsBox(projectile, player)) projectile->speedY *= -1;
+
+  for (size_t i = 0; i < boxes->amount; i++) {
+    BoxOption *opt = &boxes->boxes[i];
+    if (!opt->exists) continue;
+
+    if (circleIntersectsBox(projectile, &opt->box)) {
+      opt->exists = false;
+
+      if (checkWin(boxes)) {
+        *state = WIN;
+      }
+
+      projectile->speedY = -projectile->speedY;
+      break;
+    }
   }
 }
 
-void pong_demo(int screenWidth, int screenHeight, int targetFPS) {
+static void renderGame(GameBoxes *gameBoxes, Player *player,
+                       Projectile *projectile) {
+  const Color player_color = {254, 95, 85, 255};
+  const Color ball_color = {189, 213, 234, 255};
+  const Color box_color = {73, 88, 103, 255};
+
+  ClearBackground(RAYWHITE);
+
+  for (size_t i = 0; i < gameBoxes->amount; i++) {
+    BoxOption option = gameBoxes->boxes[i];
+    if (option.exists) {
+      Box box = option.box;
+      DrawRectangle(box.posX, box.posY, box.width, box.height, box_color);
+    }
+  }
+  DrawRectangle(player->posX, player->posY, player->width, player->height,
+                player_color);
+  DrawCircle(projectile->posX, projectile->posY, projectile->radius,
+             ball_color);
+}
+
+static void renderCenteredText(const char *msg, WindowOptions *options) {
+  const int fontSize = 30;
+
+  int x = options->width / 2 - MeasureText(msg, fontSize) / 2;
+  int y = options->height / 2 - fontSize / 2;
+
+  ClearBackground(RAYWHITE);
+  DrawText(msg, x, y, fontSize, RED);
+}
+static void renderWin(WindowOptions *options) {
+  renderCenteredText("YOU WIN!", options);
+}
+
+static void renderLoss(WindowOptions *options) {
+  renderCenteredText("GAME OVER!", options);
+}
+
+void pong_demo(WindowOptions *options) {
+  unsigned int screenWidth = options->width;
+  unsigned int screenHeight = options->height;
+  unsigned int targetFPS = options->fps;
+
   InitWindow(screenWidth, screenHeight, "Raylib Window");
   SetTargetFPS(targetFPS);
 
@@ -101,28 +174,36 @@ void pong_demo(int screenWidth, int screenHeight, int targetFPS) {
   Projectile projectile = {player.posX + (float)player_widht / 2,
                            player.posY - player.height, 20, speed, speed};
 
+  GameState state = RUNNING;
+
   while (!WindowShouldClose()) {
     float dt = GetFrameTime();
     if (IsKeyPressed(KEY_Q)) break;
     if (IsKeyDown(KEY_D)) player.posX += speed * dt;
     if (IsKeyDown(KEY_A)) player.posX -= speed * dt;
 
-    physics(&gameBoxes, &player, &projectile, screenWidth, screenHeight);
-    projectile.posX += projectile.speedX * dt;
-    projectile.posY += projectile.speedY * dt;
+    if (state == RUNNING) {
+      physics(&gameBoxes, &player, &projectile, &state, screenWidth,
+              screenHeight);
+      projectile.posX += projectile.speedX * dt;
+      projectile.posY += projectile.speedY * dt;
+    }
 
     BeginDrawing();
-    ClearBackground(RAYWHITE);
-
-    for (size_t i = 0; i < gameBoxes.amount; i++) {
-      BoxOption option = boxes[i];
-      if (option.exists) {
-        Box box = option.box;
-        DrawRectangle(box.posX, box.posY, box_width, box_height, PURPLE);
-      }
+    switch (state) {
+    case RUNNING:
+      renderGame(&gameBoxes, &player, &projectile);
+      break;
+    case LOSS:
+      renderLoss(options);
+      break;
+    case WIN:
+      renderWin(options);
+      break;
+    default:
+      fputs("Encountered invalid state!", stderr);
+      exit(99);
     }
-    DrawRectangle(player.posX, player.posY, player.widht, player.height, RED);
-    DrawCircle(projectile.posX, projectile.posY, projectile.radius, LIGHTGRAY);
 
     EndDrawing();
   }

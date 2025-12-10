@@ -1,5 +1,6 @@
 #include "ball_demo.h"
 #include "raylib.h"
+#include "types.h"
 
 #include <math.h>
 #include <stdbool.h>
@@ -25,7 +26,11 @@ Color getRGBColor(float t) {
                  127.5f + 127.5f * sinf(t + 4.1888f), 255};
 }
 
-void ball_demo(int screenWidth, int screenHeight, int targetFPS) {
+void ball_demo(WindowOptions *options) {
+  int screenWidth = options->width;
+  int screenHeight = options->height;
+  int targetFPS = options->fps;
+
   InitWindow(screenWidth, screenHeight, "Raylib Window");
   SetTargetFPS(targetFPS);
 
