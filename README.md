@@ -11,6 +11,11 @@ A small learning experiece using C and [raylib](https://github.com/raysan5/rayli
 - Modern C compiler
 - CMake (for building raylib)
 
+### WSL Ubuntu dependencies
+```shell
+sudo apt update
+sudo apt install libxinerama-dev libxrandr-dev libxcursor-dev libxi-dev libgl1-mesa-dev
+```
 
 ## Build
 

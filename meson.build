@@ -5,7 +5,7 @@ project(
   default_options : [
     'warning_level=3',
     'c_std=c17',
-    'werror=false'
+    'werror=false',
   ]
 )
 
@@ -13,8 +13,11 @@ src_files = ['src/main.c', 'src/ball_demo.c', 'src/pong_demo.c']
 
 raylib_dep = dependency('raylib', fallback : ['raylib', 'raylib_dep'])
 
+cc = meson.get_compiler('c')
+m_dep = cc.find_library('m')
+
 exe = executable(
   'raylib-test',
   src_files,
-  dependencies: [raylib_dep],
+  dependencies: [raylib_dep, m_dep],
 )
