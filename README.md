@@ -22,7 +22,7 @@ sudo apt install libxinerama-dev libxrandr-dev libxcursor-dev libxi-dev libgl1-m
 1. Setup build directory
 
 ```shell
-meson setup -C builddir
+meson setup builddir
 ```
 
 2. (Optional) Configure compile features for LSP clients
