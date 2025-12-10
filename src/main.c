@@ -7,9 +7,9 @@ const int screenHeight = 600;
 const int targetFPS = 60;
 
 int main(void) {
-  WindowOptions opt = {screenWidth, screenHeight, targetFPS};
-  // ball_demo();
-  pong_demo(&opt);
+    WindowOptions opt = {screenWidth, screenHeight, targetFPS};
+    // ball_demo();
+    pong_demo(&opt);
 
-  return 0;
+    return 0;
 }
