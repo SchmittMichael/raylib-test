@@ -8,7 +8,7 @@ const int targetFPS = 60;
 
 int main(void) {
     WindowOptions opt = {screenWidth, screenHeight, targetFPS};
-    // ball_demo();
+    // ball_demo(&opt);
     pong_demo(&opt);
 
     return 0;

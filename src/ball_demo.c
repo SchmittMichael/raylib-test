@@ -33,7 +33,7 @@ void ball_demo(WindowOptions *options) {
     int targetFPS = options->fps;
 
     InitWindow(screenWidth, screenHeight, "Raylib Window");
-    SetTargetFPS(targetFPS);
+    // SetTargetFPS(targetFPS);
 
     Vector2 playerPos = {(float)screenWidth / 2, (float)screenHeight / 2};
 
@@ -75,6 +75,7 @@ void ball_demo(WindowOptions *options) {
         DrawCircleV(funnyBallPos, 20, getRGBColor(t));
 
         EndDrawing();
+        DrawFPS(10,10);
     }
 
     CloseWindow();

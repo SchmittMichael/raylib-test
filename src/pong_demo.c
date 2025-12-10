@@ -14,8 +14,8 @@ typedef enum {
 } GameState;
 
 typedef struct {
-    int posX;
-    int posY;
+    float posX;
+    float posY;
     int width;
     int height;
 } Box;
@@ -23,8 +23,8 @@ typedef struct {
 typedef Box Player;
 
 typedef struct {
-    int posX;
-    int posY;
+    float posX;
+    float posY;
     int radius;
     int speedX;
     int speedY;
@@ -65,18 +65,19 @@ bool checkWin(GameBoxes *boxes) {
 void physics(GameBoxes *boxes, Player *player, Projectile *projectile,
              GameState *state, int screenWidth, int screenHeight) {
 
-    if (projectile->posX < projectile->radius) {
+    if (projectile->posX - projectile->radius < 0) {
         projectile->speedX *= -1;
         projectile->posX = projectile->radius;
-    } else if (projectile->posX + projectile->radius > screenWidth) {
+    }
+    if (projectile->posX + projectile->radius > screenWidth) {
         projectile->speedX *= -1;
         projectile->posX = screenWidth - projectile->radius;
     }
-
     if (projectile->posY - projectile->radius < 0) {
         projectile->speedY *= -1;
         projectile->posY = projectile->radius;
-    } else if (projectile->posY + projectile->radius > screenHeight) {
+    }
+    if (projectile->posY + projectile->radius > screenHeight) {
         *state = LOSS;
         return;
     }
@@ -139,9 +140,10 @@ static void renderLoss(WindowOptions *options) {
 }
 
 void pong_demo(WindowOptions *options) {
-    unsigned int screenWidth = options->width;
-    unsigned int screenHeight = options->height;
-    unsigned int targetFPS = options->fps;
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+    int screenWidth = options->width;
+    int screenHeight = options->height;
+    int targetFPS = options->fps;
 
     InitWindow(screenWidth, screenHeight, "Raylib Window");
     SetTargetFPS(targetFPS);
@@ -205,6 +207,7 @@ void pong_demo(WindowOptions *options) {
             exit(99);
         }
 
+        DrawFPS(10, 10);
         EndDrawing();
     }
 
