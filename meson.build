@@ -9,7 +9,14 @@ project(
   ]
 )
 
-src_files = ['src/main.c', 'src/ball_demo.c', 'src/pong_demo.c']
+src_files = [
+  'src/main.c',
+  'src/ball_demo.c',
+  'src/pong/pong_demo.c',
+  'src/pong/pong_demo_term.c',
+  'src/pong/game_logic.c',
+  'src/pong/render.c',
+]
 
 raylib_dep = dependency('raylib', fallback : ['raylib', 'raylib_dep'])
 
