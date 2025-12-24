@@ -17,8 +17,10 @@
 
 static struct termios old_termios;
 
-static inline Color pixelVal(int x, int y, int width, const Color *pixels) {
-    return pixels[y * width + x];
+static inline Color pixelVal(int x, int y, int width, int height,
+                             const Color *pixels) {
+    // for some reason I have to invert the y coordinate ????
+    return pixels[(height - 1 - y) * width + x];
 }
 
 void draw(const Color *pixels, const WindowOptions *opt) {
@@ -36,9 +38,10 @@ void draw(const Color *pixels, const WindowOptions *opt) {
 
     for (int y = 0; y < height; y += 2) {
         for (int x = 0; x < width; x++) {
-            Color top = pixelVal(x, y, width, pixels);
-            Color bottom =
-                (y + 1 < height) ? pixelVal(x, y + 1, width, pixels) : top;
+            Color top = pixelVal(x, y, width, height, pixels);
+            Color bottom = (y + 1 < height)
+                               ? pixelVal(x, y + 1, width, height, pixels)
+                               : top;
 
             offset +=
                 snprintf(buffer + offset, bufsize - offset,
@@ -79,9 +82,14 @@ void enable_raw_input(void) {
     tcgetattr(STDIN_FILENO, &old_termios);
     new_termios = old_termios;
 
-    new_termios.c_lflag &= ~(ICANON | ECHO);
+    new_termios.c_lflag &= ~(ICANON | ECHO | ISIG);
+    new_termios.c_iflag &= ~(IXON | ICRNL);
+
+    new_termios.c_cc[VMIN] = 0;  // return immediately
+    new_termios.c_cc[VTIME] = 0; // no timeout
 
     tcsetattr(STDIN_FILENO, TCSANOW, &new_termios);
+    printf("\x1b[?25l");
 }
 
 int read_key(void) {
@@ -98,7 +106,12 @@ int read_key(void) {
     return -1;
 }
 
-void disable_raw_input(void) { tcsetattr(STDIN_FILENO, TCSANOW, &old_termios); }
+void disable_raw_input(void) {
+    tcsetattr(STDIN_FILENO, TCSANOW, &old_termios);
+
+    printf("\x1b[H");
+    fflush(stdout);
+}
 
 void pong_demo_term(void) {
     WindowOptions options = {0};
